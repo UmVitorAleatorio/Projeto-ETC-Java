@@ -12,5 +12,5 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class Client extends Person {
-    List<ServiceOrder> serviceRequired;
+    List<ServiceOrder> servicesRequested;
 }

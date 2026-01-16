@@ -10,6 +10,7 @@ import java.util.Set;
 @Builder
 @Data
 public class User {
+    private Integer id;
     private String email;
     private String password;
     Set<Role> roles;

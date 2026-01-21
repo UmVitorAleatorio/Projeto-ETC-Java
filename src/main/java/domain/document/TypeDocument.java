@@ -1,5 +1,8 @@
 package domain.document;
 
+import lombok.Getter;
+
+@Getter
 public enum TypeDocument {
     CPF(1, "CPF"),
     CNPJ(2, "CNPJ");

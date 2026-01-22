@@ -17,7 +17,7 @@ import java.util.Optional;
 
 @Log4j2
 public class PersonRepository {
-    public static void save(Person person) {
+    public void save(Person person) {
         log.info("Saving person '{}'", person);
 
         try (Connection conn = ConnectionFactory.getConnection();
@@ -36,7 +36,7 @@ public class PersonRepository {
         return saveUpdateBody(conn, person, sql);
     }
 
-    public static Optional<Person> findById(Integer id) {
+    public Optional<Person> findById(Integer id) {
         log.info("Finding person by id '{}'", id);
 
         try (Connection conn = ConnectionFactory.getConnection();
@@ -88,7 +88,7 @@ public class PersonRepository {
         return ps;
     }
 
-    public static List<Person> findByName(String name) {
+    public List<Person> findByName(String name) {
         List<Person> persons = new ArrayList<>();
         try (Connection conn = ConnectionFactory.getConnection();
              PreparedStatement ps = createPreparedStatementFindByName(conn, name);
@@ -114,7 +114,7 @@ public class PersonRepository {
         return ps;
     }
 
-    public static void update(Person person) {
+    public void update(Person person) {
         log.info("Updating person '{}'", person);
         try (Connection conn = ConnectionFactory.getConnection();
              PreparedStatement ps = createPreparedStatementUpdate(conn, person)) {
@@ -147,7 +147,7 @@ public class PersonRepository {
         return ps;
     }
 
-    public static void delete(Integer id) {
+    public void delete(Integer id) {
         log.info("Deleting person using the id '{}'", id);
         try (Connection conn = ConnectionFactory.getConnection();
              PreparedStatement ps = createPreparedStatementDelete(conn, id)) {
@@ -161,6 +161,37 @@ public class PersonRepository {
         String sql = "DELETE FROM public.person p WHERE p.id = ?;";
         PreparedStatement ps = conn.prepareStatement(sql);
         ps.setInt(1, id);
+        return ps;
+    }
+
+    public Optional<Person> findByDocument(String value, TypeDocument type) {
+        try (Connection conn = ConnectionFactory.getConnection();
+             PreparedStatement ps = createPreparedStatementFindByDocument(conn, value, type);
+             ResultSet rs = ps.executeQuery()) {
+
+            if (rs.next()) {
+                Person p = Person.builder()
+                        .id(rs.getInt("id"))
+                        .build();
+                return Optional.of(p);
+            }
+        } catch (SQLException e) {
+            log.error("Error while trying to find document", e);
+//            throw new RuntimeException();
+        }
+        return Optional.empty();
+    }
+
+    private static PreparedStatement createPreparedStatementFindByDocument(Connection conn, String value, TypeDocument type) throws SQLException {
+        String sql = """
+                SELECT id
+                FROM public.person p
+                WHERE document_value = ? AND document_type = ?
+                """;
+        PreparedStatement ps = conn.prepareStatement(sql);
+        ps.setString(1, value);
+        ps.setInt(2, type.getCode());
+
         return ps;
     }
 }

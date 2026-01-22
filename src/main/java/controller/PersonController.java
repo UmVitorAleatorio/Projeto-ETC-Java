@@ -12,7 +12,13 @@ import java.util.Scanner;
 public class PersonController {
     private static final Scanner SCANNER = new Scanner(System.in);
 
-    private static void Menu(int op) {
+    private final PersonRepository personRepository;
+
+    public PersonController(PersonRepository personRepository) {
+        this.personRepository = personRepository;
+    }
+
+    private void Menu(int op) {
         switch (op) {
             case 1 -> findByName();
             case 2 -> delete();
@@ -21,10 +27,10 @@ public class PersonController {
         }
     }
 
-    private static void findByName() {
+    private void findByName() {
         System.out.println("Digite o nome ou deixe vazio para todos");
         String name = SCANNER.nextLine();
-        PersonRepository.findByName(name)
+        personRepository.findByName(name)
                 .forEach(p -> System.out.printf("[%d] - %s %s %s %.2f %d%n",
                         p.getId(),
                         p.getName(),
@@ -35,15 +41,15 @@ public class PersonController {
                 ));
     }
 
-    private static void delete() {
+    private void delete() {
         System.out.println("Digite o ID da pessoa que você deseja excluir");
         int id = Integer.parseInt(SCANNER.nextLine());
         System.out.println("Você tem certeza? S/N");
         String choice = SCANNER.nextLine();
-        if ("s".equalsIgnoreCase(choice)) PersonRepository.delete(id);
+        if ("s".equalsIgnoreCase(choice)) personRepository.delete(id);
     }
 
-    private static void save() {
+    private void save() {
         System.out.println("Escreva o nome da pessoa");
         String name = SCANNER.nextLine();
         System.out.println("Escreva o endereço da pessoa");
@@ -83,12 +89,12 @@ public class PersonController {
                 .document(document)
                 .avaliation(avaliation)
                 .build();
-        PersonRepository.save(person);
+        personRepository.save(person);
     }
 
-    private static void update() {
+    private void update() {
         System.out.println("Digite o ID da pessoa para a atualização");
-        Optional<Person> personOptional = PersonRepository.findById(Integer.parseInt(SCANNER.nextLine()));
+        Optional<Person> personOptional = personRepository.findById(Integer.parseInt(SCANNER.nextLine()));
         if (personOptional.isEmpty()) {
             System.out.println("Pessoa não encontrada");
             return;
@@ -146,6 +152,6 @@ public class PersonController {
                 .avaliation(personFromDB.getAvaliation())
                 .build();
 
-        PersonRepository.update(personToUpdate);
+        personRepository.update(personToUpdate);
     }
 }

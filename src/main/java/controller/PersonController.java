@@ -5,6 +5,7 @@ import domain.document.Document;
 import domain.document.TypeDocument;
 import domain.person.Person;
 import repository.PersonRepository;
+import service.PersonService;
 
 import java.util.Optional;
 import java.util.Scanner;
@@ -12,13 +13,15 @@ import java.util.Scanner;
 public class PersonController {
     private static final Scanner SCANNER = new Scanner(System.in);
 
+    private final PersonService personService;
     private final PersonRepository personRepository;
 
-    public PersonController(PersonRepository personRepository) {
+    public PersonController(PersonService personService, PersonRepository personRepository) {
+        this.personService = personService;
         this.personRepository = personRepository;
     }
 
-    private void Menu(int op) {
+    public void Menu(int op) {
         switch (op) {
             case 1 -> findByName();
             case 2 -> delete();
@@ -28,10 +31,10 @@ public class PersonController {
     }
 
     private void findByName() {
-        System.out.println("Digite o nome ou deixe vazio para todos");
+        System.out.println("Digite o nome ou deixe vazio para buscar todos");
         String name = SCANNER.nextLine();
         personRepository.findByName(name)
-                .forEach(p -> System.out.printf("[%d] - %s %s %s %.2f %d%n",
+                .forEach(p -> System.out.printf("[%d] - %s, Endereço: %s, Tipo: %s, Nota: %.2f, Quantidade de Notas: %d%n",
                         p.getId(),
                         p.getName(),
                         p.getAddress(),
@@ -56,12 +59,12 @@ public class PersonController {
         String address = SCANNER.nextLine();
         System.out.println("Digite o numero correspondente ao tipo do documento: 1 - CPF, 2 - CNPJ");
         int opDocType = Integer.parseInt(SCANNER.nextLine());
-        TypeDocument typeDocument = TypeDocument.fromCode(opDocType);
 
         if (opDocType != 1 && opDocType != 2) {
             System.out.println("O valor escolhido não existe");
             return;
         }
+        TypeDocument typeDocument = TypeDocument.fromCode(opDocType);
 
         if (opDocType == 1) {
             System.out.println("Digite o valor do seu CPF");
@@ -89,7 +92,7 @@ public class PersonController {
                 .document(document)
                 .avaliation(avaliation)
                 .build();
-        personRepository.save(person);
+        personService.create(person);
     }
 
     private void update() {
@@ -152,6 +155,6 @@ public class PersonController {
                 .avaliation(personFromDB.getAvaliation())
                 .build();
 
-        personRepository.update(personToUpdate);
+        personService.update(personToUpdate);
     }
 }

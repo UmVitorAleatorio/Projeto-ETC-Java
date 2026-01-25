@@ -59,6 +59,7 @@ public class PersonRepository {
 
         Document document = Document.builder()
                 .typeDocument(typeDocument)
+                .value(rs.getString("document_value"))
                 .build();
 
         Avaliation avaliation = Avaliation.builder()
@@ -78,7 +79,7 @@ public class PersonRepository {
 
     private static PreparedStatement createPreparedStatementFindById(Connection conn, Integer id) throws SQLException {
         String sql = """
-                SELECT p.id, p.name, p.address, p.document_type, p.rating_avg, p.rating_count
+                SELECT p.id, p.name, p.address, p.document_type, p.document_value, p.rating_avg, p.rating_count
                 FROM public.person p
                 WHERE p.id = ?;
                 """;
@@ -105,7 +106,7 @@ public class PersonRepository {
 
     private static PreparedStatement createPreparedStatementFindByName(Connection conn, String name) throws SQLException {
         String sql = """
-                SELECT p.id, p.name, p.address, p.document_type, p.rating_avg, p.rating_count
+                SELECT p.id, p.name, p.address, p.document_type, p.document_value, p.rating_avg, p.rating_count
                 FROM public.person p
                 WHERE p.name ILIKE ?;
                 """;

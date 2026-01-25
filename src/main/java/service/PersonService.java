@@ -1,5 +1,7 @@
 package service;
 
+import domain.Review.Avaliation;
+import domain.document.Document;
 import domain.document.TypeDocument;
 import domain.person.Person;
 import repository.PersonRepository;
@@ -50,5 +52,85 @@ public class PersonService {
             }
             throw new IllegalStateException("Documento já cadastrado para outra pessoa!");
         }
+    }
+
+    public void create(Person person) {
+        String formatted = normalizeAndFormatDocument(
+                person.getDocument().getValue(),
+                person.getDocument().getTypeDocument()
+        );
+
+        validateDocumentNotExisting(
+                formatted,
+                person.getDocument().getTypeDocument(),
+                null
+        );
+
+        Document newDocument = Document.builder()
+                .typeDocument(person.getDocument().getTypeDocument())
+                .value(formatted)
+                .build();
+
+        Avaliation avaliation = Avaliation.builder()
+                .averageRating(5.0)
+                .ratingCount(0)
+                .build();
+
+        Person personToSave = Person.builder()
+                .name(person.getName())
+                .address(person.getAddress())
+                .document(newDocument)
+                .avaliation(avaliation)
+                .build();
+
+        personRepository.save(personToSave);
+    }
+
+    public void update(Person person) {
+        if (person.getId() == null) throw new IllegalArgumentException("ID é obrigatório para a atualização");
+
+        Person personFromDb = personRepository.findById(person.getId())
+                .orElseThrow(() -> new IllegalStateException("Pessoa não encontrada"));
+
+        String name = person.getName() == null || person.getName().isBlank()
+                ? personFromDb.getName()
+                : person.getName();
+
+        String address = person.getAddress() == null || person.getAddress().isBlank()
+                ? personFromDb.getAddress()
+                : person.getAddress();
+
+        TypeDocument newType = person.getDocument() != null
+                ? person.getDocument().getTypeDocument()
+                : personFromDb.getDocument().getTypeDocument();
+
+        String newValueRaw = person.getDocument() != null
+                ? person.getDocument().getValue()
+                : personFromDb.getDocument().getValue();
+
+        String formattedDocument = normalizeAndFormatDocument(newValueRaw, newType);
+
+        validateDocumentNotExisting(
+                formattedDocument,
+                newType,
+                personFromDb.getId()
+        );
+
+        Document document = Document.builder()
+                .typeDocument(newType)
+                .value(formattedDocument)
+                .build();
+
+        Avaliation avaliation = person.getAvaliation();
+
+        Person personToUpdate = Person.builder()
+                .id(personFromDb.getId())
+                .name(name)
+                .address(address)
+                .document(document)
+                .avaliation(avaliation)
+                .build();
+
+        personRepository.update(personToUpdate);
     }
 }

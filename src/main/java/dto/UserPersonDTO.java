@@ -8,11 +8,11 @@ import java.util.Set;
 @Builder
 public record UserPersonDTO(
         Integer id,
+        Integer personId,
         String email,
         String name,
-        String address,
         Double ratingAvg,
-        int ratingCount,
+        Integer ratingCount,
         Set<Role> roles
 ) {
 }

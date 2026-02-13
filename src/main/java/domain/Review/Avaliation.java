@@ -6,8 +6,12 @@ import lombok.Data;
 @Builder
 @Data
 public class Avaliation {
+
+    @Builder.Default
     private double averageRating = 5.0;
-    private int ratingCount;
+
+    @Builder.Default
+    private int ratingCount = 0;
 
     private void saveRating (int rating) {
         this.ratingCount++;

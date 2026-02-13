@@ -1,19 +1,30 @@
 package service;
 
 import domain.Review.Avaliation;
+import domain.address.Address;
+import domain.address.State;
 import domain.document.Document;
 import domain.document.TypeDocument;
 import domain.person.Person;
+import domain.user.User;
+import repository.AddressRepository;
 import repository.PersonRepository;
+import repository.UserRepository;
 
 import java.util.Optional;
 
 public class PersonService {
 
     private final PersonRepository personRepository;
+    private final AddressRepository addressRepository;
+    private final UserService userService;
+    private final UserRepository userRepository;
 
-    public PersonService(PersonRepository personRepository) {
+    public PersonService(PersonRepository personRepository, AddressRepository addressRepository, UserService userService, UserRepository userRepository) {
         this.personRepository = personRepository;
+        this.addressRepository = addressRepository;
+        this.userService = userService;
+        this.userRepository = userRepository;
     }
 
     public String normalizeAndFormatDocument(String document, TypeDocument type) {
@@ -76,9 +87,18 @@ public class PersonService {
                 .ratingCount(0)
                 .build();
 
+        Integer addressId = addressRepository.save(person.getAddress());
+        Address addressToSave = Address.builder()
+                .id(addressId)
+                .state(person.getAddress().getState())
+                .city(person.getAddress().getCity())
+                .street(person.getAddress().getStreet())
+                .number(person.getAddress().getNumber())
+                .build();
+
         Person personToSave = Person.builder()
                 .name(person.getName())
-                .address(person.getAddress())
+                .address(addressToSave)
                 .document(newDocument)
                 .avaliation(avaliation)
                 .build();
@@ -96,9 +116,21 @@ public class PersonService {
                 ? personFromDb.getName()
                 : person.getName();
 
-        String address = person.getAddress() == null || person.getAddress().isBlank()
-                ? personFromDb.getAddress()
-                : person.getAddress();
+        State newState = person.getAddress().getState() != null
+                ? person.getAddress().getState()
+                : personFromDb.getAddress().getState();
+
+        String newCity = person.getAddress().getCity() != null
+                ? person.getAddress().getCity()
+                : personFromDb.getAddress().getCity();
+
+        String newStreet = person.getAddress().getStreet() != null
+                ? person.getAddress().getStreet()
+                : personFromDb.getAddress().getStreet();
+
+        String newNumberHouse = person.getAddress().getNumber() != null
+                ? person.getAddress().getNumber()
+                : personFromDb.getAddress().getNumber();
 
         TypeDocument newType = person.getDocument() != null
                 ? person.getDocument().getTypeDocument()
@@ -116,6 +148,14 @@ public class PersonService {
                 personFromDb.getId()
         );
 
+        Address address = Address.builder()
+                .id(personFromDb.getAddress().getId())
+                .state(newState)
+                .city(newCity)
+                .street(newStreet)
+                .number(newNumberHouse)
+                .build();
+
         Document document = Document.builder()
                 .typeDocument(newType)
                 .value(formattedDocument)
@@ -132,5 +172,62 @@ public class PersonService {
                 .build();
 
         personRepository.update(personToUpdate);
+    }
+
+    public void createPersonWithUser(Person person, String email, String password) {
+        Integer personId = createAndReturnId(person);
+        userService.createUser(personId, email, password);
+    }
+
+
+    private Integer createAndReturnId(Person person) {
+        String formatted = normalizeAndFormatDocument(
+                person.getDocument().getValue(),
+                person.getDocument().getTypeDocument()
+        );
+
+        validateDocumentNotExisting(
+                formatted,
+                person.getDocument().getTypeDocument(),
+                null
+        );
+
+        Integer addressId = addressRepository.save(person.getAddress());
+
+        Avaliation avaliation = Avaliation.builder()
+                .averageRating(5.0)
+                .ratingCount(0)
+                .build();
+
+        Person personToSave = Person.builder()
+                .name(person.getName())
+                .address(Address.builder()
+                        .id(addressId)
+                        .state(person.getAddress().getState())
+                        .city(person.getAddress().getCity())
+                        .street(person.getAddress().getStreet())
+                        .number(person.getAddress().getNumber())
+                        .build())
+                .document(Document.builder()
+                        .typeDocument(person.getDocument().getTypeDocument())
+                        .value(formatted)
+                        .build())
+                .avaliation(avaliation)
+                .build();
+
+        return personRepository.save(personToSave);
+    }
+
+
+    public void createUserForExistingPerson(
+            Integer personId,
+            String email,
+            String password
+    ) {
+        userService.createUser(personId, email, password);
+    }
+
+    public boolean isUser(Integer personId) {
+        return userRepository.existsByPersonId(personId);
     }
 }

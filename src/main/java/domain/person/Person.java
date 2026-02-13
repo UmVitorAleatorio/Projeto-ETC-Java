@@ -1,6 +1,7 @@
 package domain.person;
 
 import domain.Review.Avaliation;
+import domain.address.Address;
 import domain.document.Document;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,7 +15,7 @@ import lombok.experimental.SuperBuilder;
 public class Person {
     Integer id;
     String name;
-    String address;
+    Address address;
     Document document;
     Avaliation avaliation;
 }
